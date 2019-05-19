@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import random
+import string
 import argparse
 
 import torch
@@ -10,7 +11,6 @@ import torch.nn.init as init
 import torch.optim as optim
 import torch.utils.data
 import numpy as np
-from torch_baidu_ctc import CTCLoss
 
 from utils import CTCLabelConverter, AttnLabelConverter, Averager
 from dataset import hierarchical_dataset, AlignCollate, Batch_Balanced_Dataset
@@ -24,7 +24,7 @@ def train(opt):
     opt.batch_ratio = opt.batch_ratio.split('-')
     train_dataset = Batch_Balanced_Dataset(opt)
 
-    AlignCollate_valid = AlignCollate(imgH=opt.imgH, imgW=opt.imgW)
+    AlignCollate_valid = AlignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio_with_pad=opt.PAD)
     valid_dataset = hierarchical_dataset(root=opt.valid_data, opt=opt)
     valid_loader = torch.utils.data.DataLoader(
         valid_dataset, batch_size=opt.batch_size,
@@ -39,6 +39,7 @@ def train(opt):
     else:
         converter = AttnLabelConverter(opt.character)
     opt.num_class = len(converter.character)
+
     if opt.rgb:
         opt.input_channel = 3
     model = Model(opt)
@@ -72,7 +73,7 @@ def train(opt):
 
     """ setup loss """
     if 'CTC' in opt.Prediction:
-        criterion = CTCLoss(reduction='sum')
+        criterion = torch.nn.CTCLoss(zero_infinity=True).cuda()
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=0).cuda()  # ignore [GO] token = ignore index 0
     # loss averager
@@ -122,16 +123,16 @@ def train(opt):
         for p in model.parameters():
             p.requires_grad = True
 
-        cpu_images, cpu_texts = train_dataset.get_batch()
-        image = cpu_images.cuda()
-        text, length = converter.encode(cpu_texts)
+        image_tensors, labels = train_dataset.get_batch()
+        image = image_tensors.cuda()
+        text, length = converter.encode(labels)
         batch_size = image.size(0)
 
         if 'CTC' in opt.Prediction:
-            preds = model(image, text)
+            preds = model(image, text).log_softmax(2)
             preds_size = torch.IntTensor([preds.size(1)] * batch_size)
             preds = preds.permute(1, 0, 2)  # to use CTCLoss format
-            cost = criterion(preds, text, preds_size, length) / batch_size
+            cost = criterion(preds, text, preds_size, length)
 
         else:
             preds = model(image, text)
@@ -155,12 +156,12 @@ def train(opt):
                 loss_avg.reset()
 
                 model.eval()
-                valid_loss, current_accuracy, current_norm_ED, preds, gts, infer_time = validation(
+                valid_loss, current_accuracy, current_norm_ED, preds, labels, infer_time, length_of_data = validation(
                     model, criterion, valid_loader, converter, opt)
                 model.train()
 
-                for pred, gt in zip(preds[:5], gts[:5]):
-                    if 'CTC' not in opt.Prediction:
+                for pred, gt in zip(preds[:5], labels[:5]):
+                    if 'Attn' in opt.Prediction:
                         pred = pred[:pred.find('[s]')]
                         gt = gt[:gt.find('[s]')]
                     print(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}')
@@ -223,6 +224,7 @@ if __name__ == '__main__':
     parser.add_argument('--rgb', action='store_true', help='use rgb input')
     parser.add_argument('--character', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz', help='character label')
     parser.add_argument('--sensitive', action='store_true', help='for sensitive character mode')
+    parser.add_argument('--PAD', action='store_true', help='whether to keep ratio then pad for image resize')
     """ Model Architecture """
     parser.add_argument('--Transformation', type=str, required=True, help='Transformation stage. None|TPS')
     parser.add_argument('--FeatureExtraction', type=str, required=True, help='FeatureExtraction stage. VGG|RCNN|ResNet')
@@ -245,7 +247,8 @@ if __name__ == '__main__':
 
     """ vocab / character number configuration """
     if opt.sensitive:
-        opt.character += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        # opt.character += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        opt.character = string.printable[:-6]  # same with ASTER setting (use 94 char).
 
     """ Seed and GPU setting """
     # print("Random Seed: ", opt.manualSeed)

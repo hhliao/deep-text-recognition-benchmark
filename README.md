@@ -1,25 +1,55 @@
 # What is wrong with scene text recognition model comparisons? dataset and model analysis
-| [paper](https://arxiv.org/abs/1904.01906) | [download training and evaluation data](https://github.com/clovaai/deep-text-recognition-benchmark#download-lmdb-dataset-for-traininig-and-evaluation-from-here) | [download failure cases and cleansed label](https://github.com/clovaai/deep-text-recognition-benchmark#download-failure-cases-and-cleansed-label-from-here) |
+| [paper](https://arxiv.org/abs/1904.01906) | [download training and evaluation data](https://github.com/clovaai/deep-text-recognition-benchmark#download-lmdb-dataset-for-traininig-and-evaluation-from-here) | [download failure cases and cleansed label](https://github.com/clovaai/deep-text-recognition-benchmark#download-failure-cases-and-cleansed-label-from-here) | [download pretrained model](https://drive.google.com/drive/folders/15WPsuPJDCzhp2SvYZLRj8mAlT3zmoAMW) | <br>
+| [download resources from Baidu Netdisk (password:rryk)](https://pan.baidu.com/s/1KSNLv4EY3zFWHpBYlpFCBQ) |
 
 PyTorch implementation of our four-stage STR framework, that most existing STR models fit into.
 Using this framework allows for the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets.
 Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules. <br><br>
 <img src="./figures/trade-off.jpg" width="1000" title="trade-off">
 
+## Updates
+**Mar 17, 2019**: uploaded resources in Baidu Netdisk also, added [Run demo](https://github.com/clovaai/deep-text-recognition-benchmark#run-demo-with-pretrained-model). (check [@sharavsambuu's](https://github.com/sharavsambuu) [colab demo also](https://colab.research.google.com/drive/1PHnc_QYyf9b1_KJ1r15wYXaOXkdm1Mrk)) <br>
+**Mar 9, 2019**: PyTorch version updated from 1.0.1 to 1.1.0, use torch.nn.CTCLoss instead of torch-baidu-ctc, and various minor updated.
+
 ## Getting Started
 ### Dependency
-- This work was tested with PyTorch 1.0.1, CUDA 9.0, python 3.6 and Ubuntu 16.04. <br> You may need `pip3 install torch==1.0.1`
-- requirements : lmdb, pillow, torchvision, nltk, torch-baidu-ctc
+- This work was tested with PyTorch 1.1.0, CUDA 9.0, python 3.6 and Ubuntu 16.04. <br> You may need `pip3 install torch==1.1.0`
+- requirements : lmdb, pillow, torchvision, nltk
 ```
-pip3 install lmdb pillow torchvision nltk torch-baidu-ctc 
+pip3 install lmdb pillow torchvision nltk
 ```
-
 
 ### Download lmdb dataset for traininig and evaluation from [here](https://drive.google.com/drive/folders/192UfE9agQUMNq6AgU3_E05_FcPZK4hyt)
 data_lmdb_release.zip contains below. <br>
 training datasets : [MJSynth (MJ)](http://www.robots.ox.ac.uk/~vgg/data/text/)[1] and [SynthText (ST)](http://www.robots.ox.ac.uk/~vgg/data/scenetext/)[2] \
 validation datasets : the union of the training sets [IC13](http://rrc.cvc.uab.es/?ch=2)[3], [IC15](http://rrc.cvc.uab.es/?ch=4)[4], [IIIT](http://cvit.iiit.ac.in/projects/SceneTextUnderstanding/IIIT5K.html)[5], and [SVT](http://www.iapr-tc11.org/mediawiki/index.php/The_Street_View_Text_Dataset)[6].\
 evaluation datasets : benchmark evaluation datasets, consist of [IIIT](http://cvit.iiit.ac.in/projects/SceneTextUnderstanding/IIIT5K.html)[5], [SVT](http://www.iapr-tc11.org/mediawiki/index.php/The_Street_View_Text_Dataset)[6], [IC03](http://www.iapr-tc11.org/mediawiki/index.php/ICDAR_2003_Robust_Reading_Competitions)[7], [IC13](http://rrc.cvc.uab.es/?ch=2)[3], [IC15](http://rrc.cvc.uab.es/?ch=4)[4], [SVTP](http://openaccess.thecvf.com/content_iccv_2013/papers/Phan_Recognizing_Text_with_2013_ICCV_paper.pdf)[8], and [CUTE](http://cs-chan.com/downloads_CUTE80_dataset.html)[9].
+
+### Run demo with pretrained model
+1. Download pretrained model from [here](https://drive.google.com/drive/folders/15WPsuPJDCzhp2SvYZLRj8mAlT3zmoAMW)
+2. Add image files to test into `demo_image/`
+3. Run demo.py (add `--sensitive` option if you use case-sensitive model)
+```
+CUDA_VISIBLE_DEVICES=6 python3 demo.py \
+--Transformation TPS --FeatureExtraction ResNet --SequenceModeling BiLSTM --Prediction Attn \
+--image_folder demo_image/ \
+--saved_model TPS-ResNet-BiLSTM-Attn.pth
+```
+
+#### prediction results
+
+| demo images | [TPS-ResNet-BiLSTM-Attn](https://drive.google.com/open?id=1b59rXuGGmKne1AuHnkgDzoYgKeETNMv9) | [TPS-ResNet-BiLSTM-Attn (case-sensitive)](https://drive.google.com/open?id=1ajONZOgiG9pEYsQ-eBmgkVbMDuHgPCaY) |
+| ---         |     ---      |          --- |
+| <img src="./demo_image/demo_1.png" width="300">    |   available   |  Available   |
+| <img src="./demo_image/demo_2.jpg" width="300">      |    shakeshack    |   SHARESHACK    |
+| <img src="./demo_image/demo_3.png" width="300">  |   london   |  Londen   |
+| <img src="./demo_image/demo_4.png" width="300">      |    greenstead    |   Greenstead    |
+| <img src="./demo_image/demo_5.png" width="300" height="100">    |   toast   |  TOAST   |
+| <img src="./demo_image/demo_6.png" width="300" height="100">      |    merry    |   MERRY    |
+| <img src="./demo_image/demo_7.png" width="300">    |   underground   |   underground  |
+| <img src="./demo_image/demo_8.jpg" width="300">      |    ronaldo    |    RONALDO   |
+| <img src="./demo_image/demo_9.jpg" width="300" height="100">    |   bally   |   BALLY  |
+| <img src="./demo_image/demo_10.jpg" width="300" height="100">      |    university    |   UNIVERSITY    |
 
 
 ### Training and evaluation
@@ -37,7 +67,7 @@ CUDA_VISIBLE_DEVICES=0 python3 test.py \
 --Transformation None --FeatureExtraction VGG --SequenceModeling BiLSTM --Prediction CTC \
 --saved_model saved_models/None-VGG-BiLSTM-CTC-Seed1111/best_accuracy.pth
 ```
-3. Try to train and test our best accuracy combination (TPS-ResNet-BiLSTM-Attn) also.
+3. Try to train and test our best accuracy combination (TPS-ResNet-BiLSTM-Attn) also. ([download pretrained model](https://drive.google.com/drive/folders/15WPsuPJDCzhp2SvYZLRj8mAlT3zmoAMW))
 ```
 CUDA_VISIBLE_DEVICES=0 python3 train.py \
 --train_data data_lmdb_release/training --valid_data data_lmdb_release/validation \
