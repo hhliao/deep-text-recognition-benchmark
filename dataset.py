@@ -6,6 +6,7 @@ import math
 import lmdb
 import torch
 
+from natsort import natsorted
 from PIL import Image
 import numpy as np
 from torch.utils.data import Dataset, ConcatDataset, Subset
@@ -186,8 +187,12 @@ class RawDataset(Dataset):
         self.image_path_list = []
         for dirpath, dirnames, filenames in os.walk(root):
             for name in filenames:
-                self.image_path_list.append(os.path.join(dirpath, name))
+                _, ext = os.path.splitext(name)
+                ext = ext.lower()
+                if ext == '.jpg' or ext == '.jpeg' or ext == '.png':
+                    self.image_path_list.append(os.path.join(dirpath, name))
 
+        self.image_path_list = natsorted(self.image_path_list)
         self.nSamples = len(self.image_path_list)
 
     def __len__(self):
