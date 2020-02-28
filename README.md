@@ -1,16 +1,18 @@
-# What is wrong with scene text recognition model comparisons? dataset and model analysis
+# What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis
 | [paper](https://arxiv.org/abs/1904.01906) | [training and evaluation data](https://github.com/clovaai/deep-text-recognition-benchmark#download-lmdb-dataset-for-traininig-and-evaluation-from-here) | [failure cases and cleansed label](https://github.com/clovaai/deep-text-recognition-benchmark#download-failure-cases-and-cleansed-label-from-here) | [pretrained model](https://drive.google.com/drive/folders/15WPsuPJDCzhp2SvYZLRj8mAlT3zmoAMW) | [Baidu ver(passwd:rryk)](https://pan.baidu.com/s/1KSNLv4EY3zFWHpBYlpFCBQ) |
 
-Official PyTorch implementation of our four-stage STR framework, that most existing STR models fit into.
-Using this framework allows for the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets.
+Official PyTorch implementation of our four-stage STR framework, that most existing STR models fit into. <br>
+Using this framework allows for the module-wise contributions to performance in terms of accuracy, speed, and memory demand, under one consistent set of training and evaluation datasets. <br>
 Such analyses clean up the hindrance on the current comparisons to understand the performance gain of the existing modules. <br><br>
-<img src="./figures/trade-off.jpg" width="1000" title="trade-off">
+<img src="./figures/trade-off.png" width="1000" title="trade-off">
 
 ## Honors
 Based on this framework, we recorded the 1st place of [ICDAR2013 focused scene text](https://rrc.cvc.uab.es/?ch=2&com=evaluation&task=3), [ICDAR2019 ArT](https://rrc.cvc.uab.es/files/ICDAR2019-ArT.pdf) and 3rd place of [ICDAR2017 COCO-Text](https://rrc.cvc.uab.es/?ch=5&com=evaluation&task=2), [ICDAR2019 ReCTS (task1)](https://rrc.cvc.uab.es/files/ICDAR2019-ReCTS.pdf). <br>
 The difference between our paper and ICDAR challenge is summarized [here](https://github.com/clovaai/deep-text-recognition-benchmark/issues/13).
 
 ## Updates
+**Dec 27, 2019**: added [FLOPS](https://github.com/clovaai/deep-text-recognition-benchmark/issues/125) in our paper, and minor updates such as log_dataset.txt and [ICDAR2019-NormalizedED](https://github.com/clovaai/deep-text-recognition-benchmark/blob/86451088248e0490ff8b5f74d33f7d014f6c249a/test.py#L139-L165). <br>
+**Oct 22, 2019**: added [confidence score](https://github.com/clovaai/deep-text-recognition-benchmark/issues/82), and arranged the output form of training logs. <br>
 **Jul 31, 2019**: The paper is accepted at International Conference on Computer Vision (ICCV), Seoul 2019, as an oral talk. <br>
 **Jul 25, 2019**: The code for floating-point 16 calculation, check [@YacobBY's](https://github.com/YacobBY) [pull request](https://github.com/clovaai/deep-text-recognition-benchmark/pull/36) <br>
 **Jul 16, 2019**: added [ST_spe.zip](https://drive.google.com/drive/folders/192UfE9agQUMNq6AgU3_E05_FcPZK4hyt) dataset, word images contain special characters in SynthText (ST) dataset, see [this issue](https://github.com/clovaai/deep-text-recognition-benchmark/issues/7#issuecomment-511727025) <br>
@@ -20,7 +22,8 @@ The difference between our paper and ICDAR challenge is summarized [here](https:
 
 ## Getting Started
 ### Dependency
-- This work was tested with PyTorch 1.1.0, CUDA 9.0, python 3.6 and Ubuntu 16.04. <br> You may need `pip3 install torch==1.1.0`
+- This work was tested with PyTorch 1.3.1, CUDA 10.1, python 3.6 and Ubuntu 16.04. <br> You may need `pip3 install torch==1.3.1`. <br>
+In the paper, expriments were performed with **PyTorch 0.4.1, CUDA 9.0**.
 - requirements : lmdb, pillow, torchvision, nltk, natsort
 ```
 pip3 install lmdb pillow torchvision nltk natsort
@@ -67,13 +70,14 @@ CUDA_VISIBLE_DEVICES=0 python3 train.py \
 --select_data MJ-ST --batch_ratio 0.5-0.5 \
 --Transformation None --FeatureExtraction VGG --SequenceModeling BiLSTM --Prediction CTC
 ```
-2. Test CRNN[10] model
+2. Test CRNN[10] model. If you want to evaluate IC15-2077, check [data filtering part](https://github.com/clovaai/deep-text-recognition-benchmark/blob/c27abe6b4c681e2ee0784ad966602c056a0dd3b5/dataset.py#L148). 
 ```
 CUDA_VISIBLE_DEVICES=0 python3 test.py \
 --eval_data data_lmdb_release/evaluation --benchmark_all_eval \
 --Transformation None --FeatureExtraction VGG --SequenceModeling BiLSTM --Prediction CTC \
 --saved_model saved_models/None-VGG-BiLSTM-CTC-Seed1111/best_accuracy.pth
 ```
+
 3. Try to train and test our best accuracy combination (TPS-ResNet-BiLSTM-Attn) also. ([download pretrained model](https://drive.google.com/drive/folders/15WPsuPJDCzhp2SvYZLRj8mAlT3zmoAMW))
 ```
 CUDA_VISIBLE_DEVICES=0 python3 train.py \
@@ -94,6 +98,7 @@ CUDA_VISIBLE_DEVICES=0 python3 test.py \
 * `--eval_data`: folder path to evaluation (with test.py) lmdb dataset.
 * `--select_data`: select training data. default is MJ-ST, which means MJ and ST used as training data.
 * `--batch_ratio`: assign ratio for each selected data in the batch. default is 0.5-0.5, which means 50% of the batch is filled with MJ and the other 50% of the batch is filled ST.
+* `--data_filtering_off`: skip [data filtering](https://github.com/clovaai/deep-text-recognition-benchmark/blob/f2c54ae2a4cc787a0f5859e9fdd0e399812c76a3/dataset.py#L126-L146) when creating LmdbDataset. 
 * `--Transformation`: select Transformation module [None | TPS].
 * `--FeatureExtraction`: select FeatureExtraction module [VGG | RCNN | ResNet].
 * `--SequenceModeling`: select SequenceModeling module [None | BiLSTM].
@@ -105,7 +110,8 @@ CUDA_VISIBLE_DEVICES=0 python3 test.py \
 image_release.zip contains failure case images and benchmark evaluation images with cleansed label.
 <img src="./figures/failure-case.jpg" width="1000" title="failure cases">
 
-## When you need to create lmdb dataset
+## When you need to train on your own dataset or Non-Latin language datasets.
+1. Create your own lmdb dataset.
 ```
 pip3 install fire
 python3 create_lmdb_dataset.py --inputPath data/ --gtFile data/gt.txt --outputPath result/
@@ -118,6 +124,8 @@ test/word_2.png kills
 test/word_3.png A
 ...
 ```
+2. Modify `--select_data`, `--batch_ratio`, and `opt.character`, see [this issue](https://github.com/clovaai/deep-text-recognition-benchmark/issues/85).
+
 
 ## Acknowledgements
 This implementation has been based on these repository [crnn.pytorch](https://github.com/meijieru/crnn.pytorch), [ocr_attention](https://github.com/marvis/ocr_attention).
@@ -135,15 +143,15 @@ This implementation has been based on these repository [crnn.pytorch](https://gi
 [10] B. Shi, X. Bai, and C. Yao. An end-to-end trainable neural network for image-based sequence recognition and its application to scene text recognition. In TPAMI, volume 39, pages2298–2304. 2017. 
 
 ## Links
-- WebDemo (combination of Clova AI detection and recognition) : https://demo.ocr.clova.ai/
+- WebDemo : https://demo.ocr.clova.ai/ <br>
+Combination of Clova AI detection and recognition, additional/advanced features used for KOR/JPN.
 - Repo of detection : https://github.com/clovaai/CRAFT-pytorch
 
 ## Citation
-If you find this work useful for your research, please cite:
-
+Please consider citing this work in your publications if it helps your research.
 ```
 @inproceedings{baek2019STRcomparisons,
-  title={What is wrong with scene text recognition model comparisons? dataset and model analysis},
+  title={What Is Wrong With Scene Text Recognition Model Comparisons? Dataset and Model Analysis},
   author={Baek, Jeonghun and Kim, Geewook and Lee, Junyeop and Park, Sungrae and Han, Dongyoon and Yun, Sangdoo and Oh, Seong Joon and Lee, Hwalsuk},
   booktitle = {International Conference on Computer Vision (ICCV)},
   year={2019},
@@ -154,7 +162,8 @@ If you find this work useful for your research, please cite:
 ```
 
 ## Contact
-Feel free to contact me if there is any question (Jeonghun Baek jh.baek@navercorp.com).
+Feel free to contact us if there is any question: <br>
+for code/paper Jeonghun Baek ku21fang@gmail.com; for collaboration hwalsuk.lee@navercorp.com (our team leader).
 
 ## License
 Copyright (c) 2019-present NAVER Corp.
