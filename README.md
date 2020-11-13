@@ -11,6 +11,7 @@ Based on this framework, we recorded the 1st place of [ICDAR2013 focused scene t
 The difference between our paper and ICDAR challenge is summarized [here](https://github.com/clovaai/deep-text-recognition-benchmark/issues/13).
 
 ## Updates
+**Aug 3, 2020**: added [guideline to use Baidu warpctc](https://github.com/clovaai/deep-text-recognition-benchmark/pull/209) which reproduces CTC results of our paper. <br>
 **Dec 27, 2019**: added [FLOPS](https://github.com/clovaai/deep-text-recognition-benchmark/issues/125) in our paper, and minor updates such as log_dataset.txt and [ICDAR2019-NormalizedED](https://github.com/clovaai/deep-text-recognition-benchmark/blob/86451088248e0490ff8b5f74d33f7d014f6c249a/test.py#L139-L165). <br>
 **Oct 22, 2019**: added [confidence score](https://github.com/clovaai/deep-text-recognition-benchmark/issues/82), and arranged the output form of training logs. <br>
 **Jul 31, 2019**: The paper is accepted at International Conference on Computer Vision (ICCV), Seoul 2019, as an oral talk. <br>
@@ -48,7 +49,7 @@ CUDA_VISIBLE_DEVICES=0 python3 demo.py \
 
 #### prediction results
 
-| demo images | [TPS-ResNet-BiLSTM-Attn](https://drive.google.com/open?id=1b59rXuGGmKne1AuHnkgDzoYgKeETNMv9) | [TPS-ResNet-BiLSTM-Attn (case-sensitive)](https://drive.google.com/open?id=1ajONZOgiG9pEYsQ-eBmgkVbMDuHgPCaY) |
+| demo images | [TRBA (**T**PS-**R**esNet-**B**iLSTM-**A**ttn)](https://drive.google.com/open?id=1b59rXuGGmKne1AuHnkgDzoYgKeETNMv9) | [TRBA (case-sensitive version)](https://drive.google.com/open?id=1ajONZOgiG9pEYsQ-eBmgkVbMDuHgPCaY) |
 | ---         |     ---      |          --- |
 | <img src="./demo_image/demo_1.png" width="300">    |   available   |  Available   |
 | <img src="./demo_image/demo_2.jpg" width="300">      |    shakeshack    |   SHARESHACK    |
@@ -78,7 +79,7 @@ CUDA_VISIBLE_DEVICES=0 python3 test.py \
 --saved_model saved_models/None-VGG-BiLSTM-CTC-Seed1111/best_accuracy.pth
 ```
 
-3. Try to train and test our best accuracy combination (TPS-ResNet-BiLSTM-Attn) also. ([download pretrained model](https://drive.google.com/drive/folders/15WPsuPJDCzhp2SvYZLRj8mAlT3zmoAMW))
+3. Try to train and test our best accuracy model TRBA (**T**PS-**R**esNet-**B**iLSTM-**A**ttn) also. ([download pretrained model](https://drive.google.com/drive/folders/15WPsuPJDCzhp2SvYZLRj8mAlT3zmoAMW))
 ```
 CUDA_VISIBLE_DEVICES=0 python3 train.py \
 --train_data data_lmdb_release/training --valid_data data_lmdb_release/validation \
@@ -115,6 +116,16 @@ image_release.zip contains failure case images and benchmark evaluation images w
 ```
 pip3 install fire
 python3 create_lmdb_dataset.py --inputPath data/ --gtFile data/gt.txt --outputPath result/
+```
+The structure of data folder as below.
+```
+data
+├── gt.txt
+└── test
+    ├── word_1.png
+    ├── word_2.png
+    ├── word_3.png
+    └── ...
 ```
 At this time, `gt.txt` should be `{imagepath}\t{label}\n` <br>
 For example
@@ -155,7 +166,6 @@ Please consider citing this work in your publications if it helps your research.
   author={Baek, Jeonghun and Kim, Geewook and Lee, Junyeop and Park, Sungrae and Han, Dongyoon and Yun, Sangdoo and Oh, Seong Joon and Lee, Hwalsuk},
   booktitle = {International Conference on Computer Vision (ICCV)},
   year={2019},
-  note={to appear},
   pubstate={published},
   tppubtype={inproceedings}
 }
